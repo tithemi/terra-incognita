@@ -69,6 +69,7 @@ class Labyrinth private constructor(val width: Int, val height: Int, private val
                         'E' -> Exit
                         '#' -> Wall
                         'T' -> WithContent(Treasure)
+                        'B' -> WithContent(Bomb)
                         in '0'..'9' -> Wormhole(char).apply { wormholes[char - '0'] = this }
                         else -> throw UnsupportedOperationException("Unsupported map symbol: $char")
                     }

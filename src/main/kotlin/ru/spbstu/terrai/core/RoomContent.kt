@@ -7,3 +7,5 @@ sealed class RoomContent
 sealed class Item : RoomContent()
 
 object Treasure : Item()
+
+object Bomb : Item()

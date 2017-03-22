@@ -34,6 +34,24 @@ class Controller(private val lab: Labyrinth, private val player: Player) {
     }
 
     fun makeMove(): GameResult {
+        println(lab.width)
+        println(lab.height)
+        for (i in -1..lab.height) {
+            for (j in -1..lab.width)
+                if (Location(j, i) == playerLocation)
+                    print("X")
+                else when(lab[Location(j, i)]) {
+                    Exit -> print("E")
+                    Entrance -> print("S")
+                    Wall -> print("#")
+                    is Wormhole -> print("D")
+                    WithContent(Treasure) -> print("T")
+                    WithContent(Bomb) -> print("B")
+                    else -> print(" ")
+                }
+            println()
+        }
+
         if (playerCondition.exitReached) return GameResult(moves, exitReached = true)
         val move = player.getNextMove()
         val moveResult = when (move) {
@@ -42,20 +60,34 @@ class Controller(private val lab: Labyrinth, private val player: Player) {
             }
             is WalkMove -> {
                 var newLocation = move.direction + playerLocation
-                val newRoom = lab[newLocation]
+                var newRoom = lab[newLocation]
                 val (movePossible, status) = when (newRoom) {
                     Empty, Entrance -> true to "Empty room appears"
                     Wall -> {
-                        newLocation = playerLocation
-                        false to "Wall prevents from moving"
+                        if (playerCondition.hasBomb && newLocation.x != -1 && newLocation.y != -1
+                                && newLocation.x != lab.width && newLocation.y != lab.height) {
+                            newLocation = move.direction + playerLocation
+                            playerCondition.items.remove(Bomb)
+                            newRoom = Empty
+                            true to "You bombed wall"
+                        }
+                        else {
+                            newLocation = playerLocation
+                            false to "Wall prevents from moving"
+                        }
                     }
                     is WithContent -> {
                         val content = newRoom.content
                         when (content) {
-                            is Item -> {
-                                playerCondition = playerCondition.copy(items = playerCondition.items + content)
+                            is Treasure -> {
+                                playerCondition.items.add(content)
                                 newRoom.content = null
                                 true to "Treasure found"
+                            }
+                            is Bomb -> {
+                                playerCondition.items.add(content)
+                                newRoom.content = null
+                                true to "Bomb found"
                             }
                             null -> true to "Empty room appears"
                             else -> throw UnsupportedOperationException("Unsupported content: $content")
